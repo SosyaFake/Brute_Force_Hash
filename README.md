@@ -1,1 +1,4 @@
-# Brute_Force_Hash
+# Brute Force Hash
+
+---
+## Project for Practice
