@@ -1,4 +1,6 @@
 import hashlib
+from hashlib import md5, sha1, sha256, sha224, sha384, sha512, sha3_224, sha3_256, sha3_384, sha3_512
+import string
 
 wordlists = {
     1: "/wordlists/cirt-default-passwords.txt",
@@ -24,11 +26,11 @@ def print_final(hash, type_hash, word):
 
 
 def print_file_hashes():
-    print("\n3. Enter file to hashes")
+    print("\n2. Enter file to hashes")
 
 
-def is_hex(string):
-    for symbol in string:
+def is_hex(strk):
+    for symbol in strk:
         if not symbol in string.hexdigits:
             return 0
     return 1
@@ -62,36 +64,36 @@ def check_input_bool():
 
 
 def define_hash_type(hash):
-    hash_len = hash.len()
+    hash_len = len(hash)
     if hash_len == 32 and is_hex(hash):
         return 'md5'
-    elif hash_len == 33 and is_hex(hash) and hash.count(':') == 1:
+    elif hash_len >= 32 and is_hex(hash) and hash.count(':') == 1:
         return 'md5'
     elif hash_len == 40 and is_hex(hash):
         return 'sha1'
-    elif hash_len == 41 and is_hex(hash) and hash.count(':') == 1:
+    elif hash_len >= 40 and is_hex(hash) and hash.count(':') == 1:
         return 'sha1'
     elif hash_len == 56 and is_hex(hash):
         return 'sha224'
-    elif hash_len == 57 and is_hex(hash) and hash.count(':') == 1:
+    elif hash_len >= 56 and is_hex(hash) and hash.count(':') == 1:
         return 'sha224'
     elif hash_len == 64 and is_hex(hash):
         return 'sha256'
-    elif hash_len == 65 and is_hex(hash) and hash.count(':') == 1:
+    elif hash_len >= 64 and is_hex(hash) and hash.count(':') == 1:
         return 'sha256'
     elif hash_len == 96 and is_hex(hash):
         return 'sha384'
-    elif hash_len == 97 and is_hex(hash) and hash.count(':') == 1:
+    elif hash_len >= 96 and is_hex(hash) and hash.count(':') == 1:
         return 'sha384'
     elif hash_len == 128 and is_hex(hash):
         return 'sha512'
-    elif hash_len == 129 and is_hex(hash) and hash.count(':') == 1:
+    elif hash_len >= 128 and is_hex(hash) and hash.count(':') == 1:
         return 'sha512'
 
 
 def define_dictionary():
     # Define dictionary
-    print("\n2. Enter 0 - self-made dictionary, 1 - your dictionary")
+    print("\n3. Enter 0 - self-made dictionary, 1 - your dictionary")
     type_dict = bool(check_input_bool())
 
     if type_dict == 0:
@@ -110,7 +112,7 @@ def hashcat():
     pass  # TODO: Take hashcat from hashcat.net
 
 
-def bruteforce():  # TODO: MD5, SHA1, SHA256, SHA512, SHA3-256, SHA3-512
+def bruteforce():
     print_file_hashes()
 
     way_to_hashes = get_file_way()
@@ -123,20 +125,138 @@ def bruteforce():  # TODO: MD5, SHA1, SHA256, SHA512, SHA3-256, SHA3-512
 
         for hash in hashes:
             type_hash = define_hash_type(hash)
+
             for word in dictionary_words:
-                for salts in dictionary_salts:
+                word = word.replace('\n', '')
+
+                if hash.count(':') == 0:  # TODO: Make another def to make hashes
                     if type_hash == 'md5':
-                        if hash.count(':') == 0:  # WORK WITHOUT SALT
-                            hash_word = hashlib.new(type_hash)
-                            hash_word.update(word)
-                        else:  # TODO: WORK WITH SALT
-                            pass
+
+                        hash_word = md5(word.encode()).hexdigest()  # md5
+
                         if hash == hash_word:
                             print_final(hash, type_hash, word)
                             return 1
 
-            print_final_error(hash, type_hash)
-            return 0
+                        hash_word = md5(hash_word.encode()).hexdigest()  # md5(md5($pass))
+
+                        if hash == hash_word:
+                            print_final(hash, 'md5(md5($pass))', word)
+                            return 1
+
+                        hash_word = md5(hash_word.encode()).hexdigest()  # md5(md5(md5($pass)))
+
+                        if hash == hash_word:
+                            print_final(hash, 'md5(md5(md5($pass)))', word)
+                            return 1
+
+                        hash_word = sha1(word.encode()).hexdigest()  # md5(sha1($pass))
+                        hash_word = md5(hash_word.encode()).hexdigest()
+
+                        if hash == hash_word:
+                            print_final(hash, 'md5(sha1($pass))', word)
+                            return 1
+
+                    elif type_hash == 'sha1':
+
+                        hash_word = sha1(word.encode()).hexdigest()  # sha1($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha1($pass)', word)
+                            return 1
+
+                        hash_word = md5(word.encode()).hexdigest()
+                        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(md5($pass))
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha1(md5($pass))', word)
+                            return 1
+
+                        hash_word = md5(word.encode()).hexdigest()
+                        hash_word = md5(hash_word.encode()).hexdigest()
+                        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(md5(md5($pass)))
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha1(md5(md5($pass)))', word)
+                            return 1
+
+                        hash_word = sha1(word.encode()).hexdigest()
+                        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(sha1($pass))
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha1(sha1($pass))', word)
+                            return 1
+
+                    elif type_hash == 'sha224':
+
+                        hash_word = sha224(word.encode()).hexdigest()  # sha224($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha224($pass)', word)
+                            return 1
+
+                        hash_word = sha3_224(word.encode()).hexdigest()  # sha3_224($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha3_224($pass)', word)
+                            return 1
+
+                    elif type_hash == 'sha256':
+
+                        hash_word = sha256(word.encode()).hexdigest()  # sha256($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha256($pass)', word)
+                            return 1
+
+                        hash_word = sha3_256(word.encode()).hexdigest()  # sha3_256($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha3_256($pass)', word)
+                            return 1
+
+                        hash_word = md5(word.encode()).hexdigest()
+                        hash_word = sha256(hash_word.encode()).hexdigest()
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha256(md5($pass))', word)
+                            return 1
+
+                    elif type_hash == 'sha384':
+
+                        hash_word = sha384(word.encode()).hexdigest()  # sha384($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha384($pass)', word)
+                            return 1
+
+                        hash_word = sha3_384(word.encode()).hexdigest()  # sha3_384($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha3_384($pass)', word)
+                            return 1
+
+                    elif type_hash == 'sha512':
+
+                        hash_word = sha512(word.encode()).hexdigest()  # sha512($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha512($pass)', word)
+                            return 1
+
+                        hash_word = sha3_512(word.encode()).hexdigest()  # sha3_512($pass)
+
+                        if hash == hash_word:
+                            print_final(hash, 'sha3_512($pass)', word)
+                            return 1
+
+                else:
+
+                    for salt in dictionary_salts:
+                        pass
+
+        print_final_error(hash, type_hash)
+        return 0
 
     else:
         pass
