@@ -1,32 +1,35 @@
 import hashlib
 from hashlib import md5, sha1, sha256, sha224, sha384, sha512, sha3_224, sha3_256, sha3_384, sha3_512
 import string
+import platform
 
-wordlists = {
-    1: "/wordlists/cirt-default-passwords.txt",
-    2: "/wordlists/darkweb2017-top10000.txt",
-    3: "/wordlists/probable-v2-top12000.txt",
-    4: "/wordlists/richelieu-french-top20000.txt",
-    5: "/wordlists/xato-net-10-million-passwords.txt",
-    6: "/wordlists/xato-net-10-million-usernames.txt",
-    7: "/wordlists/rockyou1.txt",
-    8: "/wordlists/rockyou2.txt",
-    9: "/wordlists/rockyou3.txt",
-    10: "/wordlists/rockyou4.txt"
-}
+hashes_and_types = []
 
 
 ## FUNCTIONS TO HELP //START
-def print_final_error(hash, type_hash):
+
+def print_final_error(hash, type_hash):  # TODO : Make print ERROR WITH GLOBAL ARGUMENT
     print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD can't found".format(hash, type_hash))
 
 
 def print_final(hash, type_hash, word):
-    print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: {2}".format(hash, type_hash, word))
+    if hash + ' ' + type_hash not in hashes_and_types:
+        print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>".format(hash, type_hash, word))
+        hashes_and_types.append(hash + ' ' + type_hash)
+        print(hashes_and_types)
+
+
+def print_final_salt(hash, type_hash, word, salt):
+    if hash + ' ' + type_hash not in hashes_and_types:
+        print(
+            "\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>, SALT: <{3}>".format(hash,
+                                                                                                 type_hash, word, salt))
+        hashes_and_types.append(hash + ' ' + type_hash)
+        print(hashes_and_types)
 
 
 def print_file_hashes():
-    print("\n2. Enter file to hashes")
+    print("\n4. Enter file to hashes")
 
 
 def is_hex(strk):
@@ -40,7 +43,7 @@ def get_file_way():
     while True:
         try:
             file_way = str(input())
-            f = open(file_way, 'r')
+            f = open(file_way, 'r', encoding='utf-8')
             f.close()
             return file_way
         except FileNotFoundError:
@@ -57,141 +60,282 @@ def check_input_bool():
         input_bool = str(input("\nError...\nEnter 0 or 1"))
 
 
+def close_wordlists(way_to_dict):
+    way_to_dict.close()
+
+
 ## FUNCTIONS TO HELP //END
 
 
 ## FUNCTIONS TO DEFINE //START
 
+
 def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOTHER PRINT APPROVED PASS + SALT
 
-    if hash.count(':') == 0:
+    if type_hash == 'md5':
+        hash_word = word + salt
+        hash_word = md5(hash_word.encode()).hexdigest()  # md5($pass.$salt)
 
-        if type_hash == 'md5':
-            hash_word = word + salt
-            hash_word = md5(hash_word.encode()).hexdigest()  # md5($pass.$salt)
+        if hash == hash_word:
+            print_final_salt(hash, 'md5($pass.$salt)', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'md5($pass.$salt)', word)
-                return 1
+        hash_word = salt + word
+        hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.$pass)
 
-            hash_word = salt + word
-            hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.$pass)
+        if hash == hash_word:
+            print_final_salt(hash, 'md5($salt.$pass)', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'md5($salt.$pass)', word)
-                return 1
+        hash_word = salt + word + salt
+        hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.$pass.$salt)
 
-            hash_word = salt + word + salt
-            hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.$pass.$salt)
+        if hash == hash_word:
+            print_final_salt(hash, 'md5($salt.$pass.$salt)', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'md5($salt.$pass)', word)
-                return 1
+        hash_word = salt + md5(word.encode()).hexdigest()
+        hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.md5($pass))
 
-            hash_word = salt + md5(word.encode()).hexdigest()
-            hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.md5($pass))
+        if hash == hash_word:
+            print_final_salt(hash, 'md5($salt.md5($pass))', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'md5($salt.md5($pass))', word)
-                return 1
+        hash_word = word + salt
+        hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.md5($pass.$salt))
+        hash_word = salt + hash_word
+        hash_word = md5(hash_word.encode()).hexdigest()
 
-            hash_word = word + salt
-            hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.md5($pass.$salt))
-            hash_word = salt + hash_word
-            hash_word = md5(hash_word.encode()).hexdigest()
+        if hash == hash_word:
+            print_final_salt(hash, 'md5($salt.md5($pass.$salt))', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'md5($salt.md5($pass.$salt))', word)
-                return 1
+        hash_word = salt + word
+        hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.md5($salt.$pass))
+        hash_word = salt + hash_word
+        hash_word = md5(hash_word.encode()).hexdigest()
 
-            hash_word = salt + word
-            hash_word = md5(hash_word.encode()).hexdigest()   # md5($salt.md5($salt.$pass))
-            hash_word = salt + hash_word
-            hash_word = md5(hash_word.encode()).hexdigest()
+        if hash == hash_word:
+            print_final_salt(hash, 'md5($salt.md5($salt.$pass))', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'md5($salt.md5($salt.$pass))', word)
-                return 1
+        hash_word = salt + word
+        hash_word = sha1(hash_word.encode()).hexdigest()  # md5($salt.sha1($salt.$pass))
+        hash_word = salt + hash_word
+        hash_word = md5(hash_word.encode()).hexdigest()
 
-            hash_word = salt + word
-            hash_word = sha1(hash_word.encode()).hexdigest()  # md5($salt.sha1($salt.$pass))
-            hash_word = salt + hash_word
-            hash_word = md5(hash_word.encode()).hexdigest()
+        if hash == hash_word:
+            print_final_salt(hash, 'md5($salt.sha1($salt.$pass))', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'md5($salt.sha1($salt.$pass))', word)
-                return 1
+        hash_word = sha1(salt.encode()).hexdigest() + md5(word.encode()).hexdigest()
+        hash_word = md5(hash_word.encode()).hexdigest()  # md5(sha1($salt).md5($pass))
 
-            hash_word = sha1(salt.encode()).hexdigest() + md5(word.encode()).hexdigest()
-            hash_word = md5(hash_word.encode()).hexdigest()  # md5(sha1($salt).md5($pass))
+        if hash == hash_word:
+            print_final_salt(hash, 'md5(sha1($salt).md5($pass))', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'md5(sha1($salt).md5($pass))', word)
-                return 1
+    elif type_hash == 'sha1':
 
-        elif type_hash == 'sha1':
+        hash_word = word + salt
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($pass.$salt)
 
-            hash_word = sha1(word.encode()).hexdigest()  # sha1($pass)
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1($pass.$salt)', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'sha1($pass)', word)
-                return 1
+        hash_word = salt + word
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($salt.$word)
 
-        elif type_hash == 'sha224':
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1($salt.$word)', word, salt)
+            return 1
 
-            hash_word = sha224(word.encode()).hexdigest()  # sha224($pass)
+        hash_word = salt + word + salt
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($salt.$word.$salt)
 
-            if hash == hash_word:
-                print_final(hash, 'sha224($pass)', word)
-                return 1
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1($salt.$word.$salt)', word, salt)
+            return 1
 
-        elif type_hash == 'sha256':
+        hash_word = salt + sha1(word.encode()).hexdigest()
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($salt.sha1($word))
 
-            hash_word = sha256(word.encode()).hexdigest()  # sha256($pass)
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1($salt.sha1($word))', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'sha256($pass)', word)
-                return 1
+        hash_word = word + salt
+        hash_word = salt + sha1(hash_word.encode()).hexdigest()
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($salt.sha1($word.$salt))
 
-            hash_word = sha3_256(word.encode()).hexdigest()  # sha3_256($pass)
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1($salt.sha1($word.$salt))', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'sha3_256($pass)', word)
-                return 1
+        hash_word = sha1(word.encode()).hexdigest() + salt
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(sha1($word).$salt)
 
-        elif type_hash == 'sha384':
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1(sha1($word).$salt)', word, salt)
+            return 1
 
-            hash_word = sha384(word.encode()).hexdigest()  # sha384($pass)
+        hash_word = salt + word + salt
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(sha1($salt.$word.$salt))
+        hash_word = sha1(hash_word.encode()).hexdigest()
 
-            if hash == hash_word:
-                print_final(hash, 'sha384($pass)', word)
-                return 1
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1(sha1($salt.$word.$salt))', word, salt)
+            return 1
 
-            hash_word = sha3_384(word.encode()).hexdigest()  # sha3_384($pass)
+        hash_word = md5(word.encode()).hexdigest() + salt
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(md5($pass).$salt)
 
-            if hash == hash_word:
-                print_final(hash, 'sha3_384($pass)', word)
-                return 1
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1(md5($pass).$salt)', word, salt)
+            return 1
 
-        elif type_hash == 'sha512':
+        hash_word = word + salt
+        hash_word = md5(hash_word.encode()).hexdigest()
+        hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(md5($pass.$salt))
 
-            hash_word = sha512(word.encode()).hexdigest()  # sha512($pass)
+        if hash == hash_word:
+            print_final_salt(hash, 'sha1(md5($pass.$salt))', word, salt)
+            return 1
 
-            if hash == hash_word:
-                print_final(hash, 'sha512($pass)', word)
-                return 1
+    elif type_hash == 'sha256':
 
-            hash_word = sha3_512(word.encode()).hexdigest()  # sha3_512($pass)
+        hash_word = word + salt
+        hash_word = sha256(hash_word.encode()).hexdigest()  # sha256($pass.$salt)
 
-            if hash == hash_word:
-                print_final(hash, 'sha3_512($pass)', word)
-                return 1
+        if hash == hash_word:
+            print_final_salt(hash, 'sha256($pass.$salt)', word, salt)
+            return 1
 
-        return 0
+        hash_word = word + salt
+        hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256($pass.$salt)
 
-    else:
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_256($pass.$salt)', word, salt)
+            return 1
 
-        pass
+        hash_word = salt + word
+        hash_word = sha256(hash_word.encode()).hexdigest()  # sha256($salt.$word)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha256($salt.$word)', word, salt)
+            return 1
+
+        hash_word = salt + word
+        hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256($salt.$word)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_256($salt.$word)', word, salt)
+            return 1
+
+        hash_word = salt + word + salt
+        hash_word = sha256(hash_word.encode()).hexdigest()  # sha256($salt.$word.$salt)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha256($salt.$word.$salt)', word, salt)
+            return 1
+
+        hash_word = salt + word + salt
+        hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256($salt.$word.$salt)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_256($salt.$word.$salt)', word, salt)
+            return 1
+
+        hash_word = salt + sha256(word.encode()).hexdigest()
+        hash_word = sha256(hash_word.encode()).hexdigest()  # sha256($salt.sha256($word))
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha256($salt.sha256($word))', word, salt)
+            return 1
+
+        hash_word = salt + sha3_256(word.encode()).hexdigest()
+        hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256($salt.sha3_256($word))
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_256($salt.sha3_256($word))', word, salt)
+            return 1
+
+        hash_word = sha256(word.encode()).hexdigest() + salt
+        hash_word = sha256(hash_word.encode()).hexdigest()  # sha256(sha256($pass).$salt)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha256(sha256($pass).$salt)', word, salt)
+            return 1
+
+        hash_word = sha3_256(word.encode()).hexdigest() + salt
+        hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256(sha3_256($pass).$salt)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_256($pass.$salt)', word, salt)
+            return 1
+
+    elif type_hash == 'sha384':
+
+        hash_word = word + salt
+        hash_word = sha384(hash_word.encode()).hexdigest()  # sha384($pass.$salt)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha384($pass.$salt)', word, salt)
+            return 1
+
+        hash_word = word + salt
+        hash_word = sha3_384(hash_word.encode()).hexdigest()  # sha3_384($pass.$salt)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_384($pass.$salt)', word, salt)
+            return 1
+
+        hash_word = salt + word
+        hash_word = sha384(hash_word.encode()).hexdigest()  # sha384($salt.$pass)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha384($salt.$pass)', word, salt)
+            return 1
+
+        hash_word = salt + word
+        hash_word = sha3_384(hash_word.encode()).hexdigest()  # sha3_384($salt.$pass)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_384($salt.$pass)', word, salt)
+            return 1
+
+    elif type_hash == 'sha512':
+
+        hash_word = word + salt
+        hash_word = sha512(hash_word.encode()).hexdigest()  # sha512($pass.$salt)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha512($pass.$salt)', word, salt)
+            return 1
+
+        hash_word = word + salt
+        hash_word = sha3_512(hash_word.encode()).hexdigest()  # sha3_512($pass.$salt)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_512($pass.$salt)', word, salt)
+            return 1
+
+        hash_word = salt + word
+        hash_word = sha512(hash_word.encode()).hexdigest()  # sha512($salt.$pass)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha512($salt.$pass)', word, salt)
+            return 1
+
+        hash_word = salt + word
+        hash_word = sha3_512(hash_word.encode()).hexdigest()  # sha3_512($salt.$pass)
+
+        if hash == hash_word:
+            print_final_salt(hash, 'sha3_512($salt.$pass)', word, salt)
+            return 1
+
+    return 0
 
 
 def define_hash_word_no_salt(hash, type_hash, word):
@@ -222,7 +366,8 @@ def define_hash_word_no_salt(hash, type_hash, word):
             print_final(hash, 'md5(sha1($pass))', word)
             return 1
 
-        hash_word = sha1(word.encode()).hexdigest() + md5(word.encode()).hexdigest() + sha1(word.encode()).hexdigest()  # md5(sha1($pass).md5($pass).sha1($pass))
+        hash_word = sha1(word.encode()).hexdigest() + md5(word.encode()).hexdigest() + sha1(
+            word.encode()).hexdigest()  # md5(sha1($pass).md5($pass).sha1($pass))
         hash_word = md5(hash_word.encode()).hexdigest()
 
         if hash == hash_word:
@@ -343,14 +488,21 @@ def define_hash_type(hash):
 
 
 def define_dictionary():
+    wordlists = ''
+
     # Define dictionary
-    print("\n3. Enter 0 - self-made dictionary, 1 - your dictionary")
+    print("\n2. Enter 0 - self-made dictionary, 1 - your dictionary")
     type_dict = bool(check_input_bool())
 
     if type_dict == 0:
+        if platform.system() == 'Linux':
+            wordlists = open('wordlists_linux.txt', 'r', encoding='utf-8')
+        elif platform.system() == 'Windows':
+            wordlists = open('wordlists_win.txt', 'r', encoding='utf-8')
+        print("\n3. Self-made dictionary")
         way_to_dict = wordlists
     else:
-        print("\nEnter way to your dictionary")
+        print("\n3. Enter way to your dictionary")
         way_to_dict = get_file_way()
 
     return way_to_dict
@@ -358,95 +510,113 @@ def define_dictionary():
 
 ## FUNCTIONS TO DEFINE //END
 
+def brute(way_to_dict, way_to_hashes):
+    hashes = open(way_to_hashes, 'r', encoding='utf-8')
+
+    dictionary_words = open(way_to_dict, 'r', encoding='utf-8')
+    dictionary_salts = open(way_to_dict, 'r', encoding='utf-8')
+
+    for hash in hashes:
+
+        hash = hash.replace('\n', '')
+        bool_word_found = 0
+
+        if hash.count(':') == 0:  # WORK WITHOUT <:>
+
+            type_hash = define_hash_type(hash)
+
+            dictionary_words.seek(0, 0)
+
+            for word in dictionary_words:
+
+                word = word.replace('\n', '')
+
+                if not define_hash_word_no_salt(hash, type_hash, word):
+                    bool_word_found = 0
+
+                else:
+                    bool_word_found = 1
+                    break
+
+            if bool_word_found == 1:
+                continue
+
+            else:
+
+                dictionary_words.seek(0, 0)
+
+                for word in dictionary_words:
+
+                    word = word.replace('\n', '')
+
+                    dictionary_salts.seek(0, 0)
+
+                    for salt in dictionary_salts:
+
+                        salt = salt.replace('\n', '')
+
+                        if not define_hash_word_with_salt(hash, type_hash, word, salt):
+                            bool_word_found = 0
+
+                        else:
+                            bool_word_found = 1
+                            break
+
+                    if bool_word_found == 1:
+                        break
+
+        else:
+
+            dictionary_words.seek(0, 0)  # WORK WITH <:>
+
+            type_hash = define_hash_type(hash.partition(':')[0])
+
+            if type_hash is None:
+                print_final_error(hash, 'unknown')
+                continue
+
+            salt = hash.partition(':')[2]
+
+            for word in dictionary_words:
+
+                word = word.replace('\n', '')
+
+                salt = salt.replace('\n', '')
+
+                if not define_hash_word_with_salt(hash.partition(':')[0], type_hash, word, salt):
+                    bool_word_found = 0
+
+                else:
+                    bool_word_found = 1
+                    break
+
+        if bool_word_found == 0:  # TODO : Make print ERROR WITH GLOBAL ARGUMENT
+            print_final_error(hash, type_hash)
+
+    dictionary_words.close()
+    dictionary_salts.close()
+
 
 def hashcat():
     pass  # TODO: Take hashcat from hashcat.net
 
 
 def bruteforce():
-    print_file_hashes()
-
-    way_to_hashes = get_file_way()
-    hashes = open(way_to_hashes, 'r')
-
     way_to_dict = define_dictionary()
 
+    print_file_hashes()
+    way_to_hashes = get_file_way()
+
     if isinstance(way_to_dict, str):
-
-        dictionary_words = open(way_to_dict, 'r')
-        dictionary_salts = open(way_to_dict, 'r')
-
-        for hash in hashes:
-            if hash.count(':') == 0:
-                flag = 0
-
-                hash = hash.replace('\n', '')
-                type_hash = define_hash_type(hash)
-                print(type_hash)
-
-                for word in dictionary_words:
-
-                    word = word.replace('\n', '')
-
-
-                    if not define_hash_word_no_salt(hash, type_hash, word):
-                        print_final_error(hash, type_hash)  # TODO : Make normalnoe error, with salt
-                        flag = 1
-                        break
-
-                if flag == 1:
-                    continue
-
-                dictionary_words.close()
-                dictionary_words = open(way_to_dict, 'r')
-
-                for word in dictionary_words: # TODO : Make normalnoe error, with salt
-
-                    #if flag == 1:
-                       # break
-
-                    word = word.replace('\n', '')
-
-                    for salt in dictionary_salts:
-
-                        salt = salt.replace('\n', '')
-
-                        if not define_hash_word_with_salt(hash, type_hash, word, salt):
-                            print_final_error(hash, type_hash)
-                            flag = 1
-                            break
-
-            else:
-
-                flag = 0
-
-                hash = hash.replace('\n', '')
-                type_hash = define_hash_type(hash.partition(':')[0])
-
-                if type_hash is None:
-                    type_hash = define_hash_type(hash.partition(':')[2])
-
-                dictionary_words.seek(0, 0)
-                dictionary_salts.seek(0, 0)
-
-                for word in dictionary_words:
-
-                    if flag == 1:
-                        break
-
-                    word = word.replace('\n', '')
-
-                    for salt in dictionary_salts:
-
-                        salt = salt.replace('\n', '')
-
-                        if not define_hash_word_with_salt(hash, type_hash, word, salt):
-                            print_final_error(hash, type_hash)
-                            flag = 1
-                            break
+        brute(way_to_dict, way_to_hashes)
 
     else:
-        pass
+        for way_to_dict_else in way_to_dict:
+            way_to_dict_else = way_to_dict_else.replace('\n', '')
+
+            brute(way_to_dict_else, way_to_hashes)
+
+        close_wordlists(way_to_dict)
 
 
 def main():

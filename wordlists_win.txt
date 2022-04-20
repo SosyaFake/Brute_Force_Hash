@@ -1,0 +1,10 @@
+wordlists\cirt-default-passwords.txt
+wordlists\darkweb2017-top10000.txt
+wordlists\probable-v2-top12000.txt
+wordlists\richelieu-french-top20000.txt
+wordlists\xato-net-10-million-passwords.txt
+wordlists\xato-net-10-million-usernames.txt
+wordlists\rockyou1.txt
+wordlists\rockyou2.txt
+wordlists\rockyou3.txt
+wordlists\rockyou4.txt
