@@ -22,7 +22,8 @@ def write_in_file(hash, type_hash, word, salt):
         exit_hash = "HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>\n".format(hash, type_hash, word)
 
     else:
-        exit_hash = "HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>, SALT: <{3}>\n".format(hash, type_hash, word, salt)
+        exit_hash = "HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>, SALT: <{3}>\n".format(hash, type_hash,
+                                                                                                    word, salt)
 
     exit_file.write(exit_hash)
 
@@ -74,6 +75,18 @@ def get_file_way():
             print("\nError file not found...\nEnter another way to file")
 
 
+def check_input_str():
+    input_str = str(input())
+    while input_str != ('0' or '1' or '2'):
+        if input_str == '2':
+            return input_str
+        elif input_str == '1':
+            return input_str
+        elif input_str == '0':
+            return input_str
+        input_str = str(input("\nError...\nEnter 0 or 1 or 2"))
+
+
 def check_input_bool():
     input_bool = str(input())
     while input_bool != ('0' or '1'):
@@ -94,8 +107,7 @@ def close_wordlists(way_to_dict):
 ## FUNCTIONS TO DEFINE //START
 
 
-def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOTHER PRINT APPROVED PASS + SALT
-
+def define_hash_word_with_salt(hash, type_hash, word, salt):
     if type_hash == 'md5':
         hash_word = word + salt
         hash_word = md5(hash_word.encode()).hexdigest()  # md5($pass.$salt)
@@ -362,6 +374,89 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
     return 0
 
 
+def generate_rt(word, file):
+
+    hash_word = md5(word.encode()).hexdigest()  # md5
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = md5(hash_word.encode()).hexdigest()  # md5(md5($pass))
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = md5(hash_word.encode()).hexdigest()  # md5(md5(md5($pass)))
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha1(word.encode()).hexdigest()  # md5(sha1($pass))
+    hash_word = md5(hash_word.encode()).hexdigest()
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha1(word.encode()).hexdigest() + md5(word.encode()).hexdigest() + sha1(
+        word.encode()).hexdigest()  # md5(sha1($pass).md5($pass).sha1($pass))
+    hash_word = md5(hash_word.encode()).hexdigest()
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha1(word.encode()).hexdigest()  # sha1($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = md5(word.encode()).hexdigest()
+    hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(md5($pass))
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = md5(word.encode()).hexdigest()
+    hash_word = md5(hash_word.encode()).hexdigest()
+    hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(md5(md5($pass)))
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha1(word.encode()).hexdigest()
+    hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(sha1($pass))
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha224(word.encode()).hexdigest()  # sha224($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha3_224(word.encode()).hexdigest()  # sha3_224($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha256(word.encode()).hexdigest()  # sha256($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha3_256(word.encode()).hexdigest()  # sha3_256($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = md5(word.encode()).hexdigest()
+    hash_word = sha256(hash_word.encode()).hexdigest()
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha384(word.encode()).hexdigest()  # sha384($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha3_384(word.encode()).hexdigest()  # sha3_384($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha512(word.encode()).hexdigest()  # sha512($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+    hash_word = sha3_512(word.encode()).hexdigest()  # sha3_512($pass)
+
+    file.write("{0}:{1}\n".format(word, hash_word))
+
+
 def define_hash_word_no_salt(hash, type_hash, word):
     if type_hash == 'md5':
 
@@ -620,12 +715,28 @@ def brute(way_to_dict, way_to_hashes):
                     bool_word_found = 1
                     break
 
-        if bool_word_found == 0 and count_for_error != 0:  # TODO : Make print ERROR WITH GLOBAL ARGUMENT
+        if bool_word_found == 0 and count_for_error != 0:
             print_final_error(hash, type_hash)
             continue
 
     dictionary_words.close()
     dictionary_salts.close()
+
+
+def rainbow():
+    print("\n2. Enter way to your words to make rainbow-tables")
+    way_to_dict = get_file_way()
+
+    dicts = open(way_to_dict, 'r')
+    output_rt = open('output_rainbow_tables.txt', 'w+')
+
+    for word in dicts:
+        word = word.replace('\n', '')
+        generate_rt(word, output_rt)
+
+    print("\n3. Rainbow table generates. Check <output_rainbow_tables.txt> ")
+    output_rt.close()
+    dicts.close()
 
 
 def hashcat():
@@ -652,12 +763,14 @@ def bruteforce():
 
 def main():
     # Define hashcat or self-made
-    print("\n1. Enter 0 - self-made bruteforce, 1 - hashcat bruteforce")
-    type_bf = bool(check_input_bool())
-    if type_bf == 0:
+    print("\n1. Enter 0 - self-made bruteforce, 1 - hashcat bruteforce, 2 - generate rainbow-tables")
+    type_bf = check_input_str()
+    if type_bf == '0':
         bruteforce()
-    else:
+    elif type_bf == '1':
         hashcat()
+    elif type_bf == '2':
+        rainbow()
 
 
 if __name__ == '__main__':
