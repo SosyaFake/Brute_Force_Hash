@@ -8,15 +8,39 @@ hashes_and_types = []
 
 ## FUNCTIONS TO HELP //START
 
-def print_final_error(hash, type_hash):  # TODO : Make print ERROR WITH GLOBAL ARGUMENT
-    print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD can't found".format(hash, type_hash))
+def write_in_file(hash, type_hash, word, salt):
+    exit_file = open("output.txt", "a+")
+
+    if type_hash == 'unknown':
+        exit_hash = "HASH: {0}, have TYPE: {1}, and original PASSWORD: can't found\n".format(hash, type_hash)
+
+        exit_file.write(exit_hash)
+        exit_file.close()
+        return
+
+    if salt == '':
+        exit_hash = "HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>\n".format(hash, type_hash, word)
+
+    else:
+        exit_hash = "HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>, SALT: <{3}>\n".format(hash, type_hash, word, salt)
+
+    exit_file.write(exit_hash)
+
+    exit_file.close()
+
+
+def print_final_error(hash, type_hash):
+    if hash + ' ' + type_hash not in hashes_and_types:
+        print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: can't found".format(hash, type_hash))
+        hashes_and_types.append(hash + ' ' + type_hash)
+        write_in_file(hash, type_hash, '', '')
 
 
 def print_final(hash, type_hash, word):
     if hash + ' ' + type_hash not in hashes_and_types:
         print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>".format(hash, type_hash, word))
         hashes_and_types.append(hash + ' ' + type_hash)
-        print(hashes_and_types)
+        write_in_file(hash, type_hash, word, '')
 
 
 def print_final_salt(hash, type_hash, word, salt):
@@ -25,7 +49,7 @@ def print_final_salt(hash, type_hash, word, salt):
             "\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>, SALT: <{3}>".format(hash,
                                                                                                  type_hash, word, salt))
         hashes_and_types.append(hash + ' ' + type_hash)
-        print(hashes_and_types)
+        write_in_file(hash, type_hash, word, salt)
 
 
 def print_file_hashes():
@@ -76,28 +100,28 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = word + salt
         hash_word = md5(hash_word.encode()).hexdigest()  # md5($pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'md5($pass.$salt)', word, salt)
             return 1
 
         hash_word = salt + word
         hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.$pass)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'md5($salt.$pass)', word, salt)
             return 1
 
         hash_word = salt + word + salt
         hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.$pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'md5($salt.$pass.$salt)', word, salt)
             return 1
 
         hash_word = salt + md5(word.encode()).hexdigest()
         hash_word = md5(hash_word.encode()).hexdigest()  # md5($salt.md5($pass))
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'md5($salt.md5($pass))', word, salt)
             return 1
 
@@ -106,7 +130,7 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = salt + hash_word
         hash_word = md5(hash_word.encode()).hexdigest()
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'md5($salt.md5($pass.$salt))', word, salt)
             return 1
 
@@ -115,7 +139,7 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = salt + hash_word
         hash_word = md5(hash_word.encode()).hexdigest()
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'md5($salt.md5($salt.$pass))', word, salt)
             return 1
 
@@ -124,14 +148,14 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = salt + hash_word
         hash_word = md5(hash_word.encode()).hexdigest()
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'md5($salt.sha1($salt.$pass))', word, salt)
             return 1
 
         hash_word = sha1(salt.encode()).hexdigest() + md5(word.encode()).hexdigest()
         hash_word = md5(hash_word.encode()).hexdigest()  # md5(sha1($salt).md5($pass))
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'md5(sha1($salt).md5($pass))', word, salt)
             return 1
 
@@ -140,28 +164,28 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = word + salt
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1($pass.$salt)', word, salt)
             return 1
 
         hash_word = salt + word
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($salt.$word)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1($salt.$word)', word, salt)
             return 1
 
         hash_word = salt + word + salt
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($salt.$word.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1($salt.$word.$salt)', word, salt)
             return 1
 
         hash_word = salt + sha1(word.encode()).hexdigest()
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($salt.sha1($word))
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1($salt.sha1($word))', word, salt)
             return 1
 
@@ -169,14 +193,14 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = salt + sha1(hash_word.encode()).hexdigest()
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1($salt.sha1($word.$salt))
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1($salt.sha1($word.$salt))', word, salt)
             return 1
 
         hash_word = sha1(word.encode()).hexdigest() + salt
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(sha1($word).$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1(sha1($word).$salt)', word, salt)
             return 1
 
@@ -184,14 +208,14 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(sha1($salt.$word.$salt))
         hash_word = sha1(hash_word.encode()).hexdigest()
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1(sha1($salt.$word.$salt))', word, salt)
             return 1
 
         hash_word = md5(word.encode()).hexdigest() + salt
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(md5($pass).$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1(md5($pass).$salt)', word, salt)
             return 1
 
@@ -199,7 +223,7 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = md5(hash_word.encode()).hexdigest()
         hash_word = sha1(hash_word.encode()).hexdigest()  # sha1(md5($pass.$salt))
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha1(md5($pass.$salt))', word, salt)
             return 1
 
@@ -208,70 +232,70 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = word + salt
         hash_word = sha256(hash_word.encode()).hexdigest()  # sha256($pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha256($pass.$salt)', word, salt)
             return 1
 
         hash_word = word + salt
         hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256($pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_256($pass.$salt)', word, salt)
             return 1
 
         hash_word = salt + word
         hash_word = sha256(hash_word.encode()).hexdigest()  # sha256($salt.$word)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha256($salt.$word)', word, salt)
             return 1
 
         hash_word = salt + word
         hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256($salt.$word)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_256($salt.$word)', word, salt)
             return 1
 
         hash_word = salt + word + salt
         hash_word = sha256(hash_word.encode()).hexdigest()  # sha256($salt.$word.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha256($salt.$word.$salt)', word, salt)
             return 1
 
         hash_word = salt + word + salt
         hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256($salt.$word.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_256($salt.$word.$salt)', word, salt)
             return 1
 
         hash_word = salt + sha256(word.encode()).hexdigest()
         hash_word = sha256(hash_word.encode()).hexdigest()  # sha256($salt.sha256($word))
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha256($salt.sha256($word))', word, salt)
             return 1
 
         hash_word = salt + sha3_256(word.encode()).hexdigest()
         hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256($salt.sha3_256($word))
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_256($salt.sha3_256($word))', word, salt)
             return 1
 
         hash_word = sha256(word.encode()).hexdigest() + salt
         hash_word = sha256(hash_word.encode()).hexdigest()  # sha256(sha256($pass).$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha256(sha256($pass).$salt)', word, salt)
             return 1
 
         hash_word = sha3_256(word.encode()).hexdigest() + salt
         hash_word = sha3_256(hash_word.encode()).hexdigest()  # sha3_256(sha3_256($pass).$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_256($pass.$salt)', word, salt)
             return 1
 
@@ -280,28 +304,28 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = word + salt
         hash_word = sha384(hash_word.encode()).hexdigest()  # sha384($pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha384($pass.$salt)', word, salt)
             return 1
 
         hash_word = word + salt
         hash_word = sha3_384(hash_word.encode()).hexdigest()  # sha3_384($pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_384($pass.$salt)', word, salt)
             return 1
 
         hash_word = salt + word
         hash_word = sha384(hash_word.encode()).hexdigest()  # sha384($salt.$pass)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha384($salt.$pass)', word, salt)
             return 1
 
         hash_word = salt + word
         hash_word = sha3_384(hash_word.encode()).hexdigest()  # sha3_384($salt.$pass)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_384($salt.$pass)', word, salt)
             return 1
 
@@ -310,28 +334,28 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):  # TODO : MAKE ANOT
         hash_word = word + salt
         hash_word = sha512(hash_word.encode()).hexdigest()  # sha512($pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha512($pass.$salt)', word, salt)
             return 1
 
         hash_word = word + salt
         hash_word = sha3_512(hash_word.encode()).hexdigest()  # sha3_512($pass.$salt)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_512($pass.$salt)', word, salt)
             return 1
 
         hash_word = salt + word
         hash_word = sha512(hash_word.encode()).hexdigest()  # sha512($salt.$pass)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha512($salt.$pass)', word, salt)
             return 1
 
         hash_word = salt + word
         hash_word = sha3_512(hash_word.encode()).hexdigest()  # sha3_512($salt.$pass)
 
-        if hash == hash_word:
+        if hash.partition(':')[0] == hash_word:
             print_final_salt(hash, 'sha3_512($salt.$pass)', word, salt)
             return 1
 
@@ -518,12 +542,18 @@ def brute(way_to_dict, way_to_hashes):
 
     for hash in hashes:
 
+        count_for_error = 0
+
         hash = hash.replace('\n', '')
         bool_word_found = 0
 
         if hash.count(':') == 0:  # WORK WITHOUT <:>
 
             type_hash = define_hash_type(hash)
+
+            if type_hash is None:
+                print_final_error(hash, 'unknown')
+                continue
 
             dictionary_words.seek(0, 0)
 
@@ -533,7 +563,7 @@ def brute(way_to_dict, way_to_hashes):
 
                 if not define_hash_word_no_salt(hash, type_hash, word):
                     bool_word_found = 0
-
+                    count_for_error += 1
                 else:
                     bool_word_found = 1
                     break
@@ -557,7 +587,7 @@ def brute(way_to_dict, way_to_hashes):
 
                         if not define_hash_word_with_salt(hash, type_hash, word, salt):
                             bool_word_found = 0
-
+                            count_for_error += 1
                         else:
                             bool_word_found = 1
                             break
@@ -583,22 +613,23 @@ def brute(way_to_dict, way_to_hashes):
 
                 salt = salt.replace('\n', '')
 
-                if not define_hash_word_with_salt(hash.partition(':')[0], type_hash, word, salt):
+                if not define_hash_word_with_salt(hash, type_hash, word, salt):
                     bool_word_found = 0
-
+                    count_for_error += 1
                 else:
                     bool_word_found = 1
                     break
 
-        if bool_word_found == 0:  # TODO : Make print ERROR WITH GLOBAL ARGUMENT
+        if bool_word_found == 0 and count_for_error != 0:  # TODO : Make print ERROR WITH GLOBAL ARGUMENT
             print_final_error(hash, type_hash)
+            continue
 
     dictionary_words.close()
     dictionary_salts.close()
 
 
 def hashcat():
-    pass  # TODO: Take hashcat from hashcat.net
+    pass
 
 
 def bruteforce():
