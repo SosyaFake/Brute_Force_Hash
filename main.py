@@ -4,12 +4,17 @@ import string
 import platform
 
 hashes_and_types = []
+words_for_rt = []
+
+# help global parameter to check <1.> stage
+buttons = {'0', '1', '2', 'e', "exit"}
 
 
 ## FUNCTIONS TO HELP //START
 
+# function to output to file
 def write_in_file(hash, type_hash, word, salt):
-    exit_file = open("output.txt", "a+")
+    exit_file = open("output_files/output_cracked_hashes.txt", "a+")
 
     if type_hash == 'unknown':
         exit_hash = "HASH: {0}, have TYPE: {1}, and original PASSWORD: can't found\n".format(hash, type_hash)
@@ -30,6 +35,7 @@ def write_in_file(hash, type_hash, word, salt):
     exit_file.close()
 
 
+# print function & output hash
 def print_final_error(hash, type_hash):
     if hash + ' ' + type_hash not in hashes_and_types:
         print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: can't found".format(hash, type_hash))
@@ -37,6 +43,7 @@ def print_final_error(hash, type_hash):
         write_in_file(hash, type_hash, '', '')
 
 
+# print function & output hash
 def print_final(hash, type_hash, word):
     if hash + ' ' + type_hash not in hashes_and_types:
         print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>".format(hash, type_hash, word))
@@ -44,6 +51,7 @@ def print_final(hash, type_hash, word):
         write_in_file(hash, type_hash, word, '')
 
 
+# print function & output hash
 def print_final_salt(hash, type_hash, word, salt):
     if hash + ' ' + type_hash not in hashes_and_types:
         print(
@@ -53,10 +61,12 @@ def print_final_salt(hash, type_hash, word, salt):
         write_in_file(hash, type_hash, word, salt)
 
 
+# print function
 def print_file_hashes():
     print("\n4. Enter file to hashes")
 
 
+# help function to check hex str
 def is_hex(strk):
     for symbol in strk:
         if not symbol in string.hexdigits:
@@ -64,6 +74,7 @@ def is_hex(strk):
     return 1
 
 
+# function to check exist file
 def get_file_way():
     while True:
         try:
@@ -75,18 +86,23 @@ def get_file_way():
             print("\nError file not found...\nEnter another way to file")
 
 
+# help function to check input from keyboard
 def check_input_str():
     input_str = str(input())
-    while input_str != ('0' or '1' or '2'):
-        if input_str == '2':
-            return input_str
-        elif input_str == '1':
-            return input_str
-        elif input_str == '0':
-            return input_str
-        input_str = str(input("\nError...\nEnter 0 or 1 or 2"))
+
+    if input_str in buttons:
+        print(input_str)
+        return input_str
+
+    else:
+
+        while input_str not in buttons:
+            input_str = str(input("\nError...\nEnter <0 / 1 / 2 / e>\n"))
+            if input_str in buttons:
+                return input_str
 
 
+# help function to check input from keyboard
 def check_input_bool():
     input_bool = str(input())
     while input_bool != ('0' or '1'):
@@ -94,9 +110,10 @@ def check_input_bool():
             return 1
         elif input_bool == '0':
             return 0
-        input_bool = str(input("\nError...\nEnter 0 or 1"))
+        input_bool = str(input("\nError...\nEnter <0 / 1>\n"))
 
 
+# help function to close self-made dictionaries
 def close_wordlists(way_to_dict):
     way_to_dict.close()
 
@@ -107,6 +124,7 @@ def close_wordlists(way_to_dict):
 ## FUNCTIONS TO DEFINE //START
 
 
+# function to brute hash with salt
 def define_hash_word_with_salt(hash, type_hash, word, salt):
     if type_hash == 'md5':
         hash_word = word + salt
@@ -374,8 +392,8 @@ def define_hash_word_with_salt(hash, type_hash, word, salt):
     return 0
 
 
+# function to make hashes to rainbow tables
 def generate_rt(word, file):
-
     hash_word = md5(word.encode()).hexdigest()  # md5
 
     file.write("{0}:{1}\n".format(word, hash_word))
@@ -457,6 +475,7 @@ def generate_rt(word, file):
     file.write("{0}:{1}\n".format(word, hash_word))
 
 
+# function to brute hash with no salt
 def define_hash_word_no_salt(hash, type_hash, word):
     if type_hash == 'md5':
 
@@ -589,6 +608,7 @@ def define_hash_word_no_salt(hash, type_hash, word):
     return 0
 
 
+# function to define hash type
 def define_hash_type(hash):
     hash_len = len(hash)
     if hash_len == 32 and is_hex(hash):
@@ -606,6 +626,7 @@ def define_hash_type(hash):
     return None
 
 
+# function to define dictionary
 def define_dictionary():
     wordlists = ''
 
@@ -615,9 +636,9 @@ def define_dictionary():
 
     if type_dict == 0:
         if platform.system() == 'Linux':
-            wordlists = open('wordlists_linux.txt', 'r', encoding='utf-8')
+            wordlists = open('wordlists_for_os/wordlists_linux.txt', 'r', encoding='utf-8')
         elif platform.system() == 'Windows':
-            wordlists = open('wordlists_win.txt', 'r', encoding='utf-8')
+            wordlists = open('wordlists_for_os/wordlists_win.txt', 'r', encoding='utf-8')
         print("\n3. Self-made dictionary")
         way_to_dict = wordlists
     else:
@@ -629,6 +650,7 @@ def define_dictionary():
 
 ## FUNCTIONS TO DEFINE //END
 
+# main function to brute hash/es
 def brute(way_to_dict, way_to_hashes):
     hashes = open(way_to_hashes, 'r', encoding='utf-8')
 
@@ -723,18 +745,22 @@ def brute(way_to_dict, way_to_hashes):
     dictionary_salts.close()
 
 
+# function makes rainbow table from dicts
 def rainbow():
     print("\n2. Enter way to your words to make rainbow-tables")
     way_to_dict = get_file_way()
 
     dicts = open(way_to_dict, 'r')
-    output_rt = open('output_rainbow_tables.txt', 'w+')
+    output_rt = open('output_files/output_rainbow_tables.txt', 'a+')
 
     for word in dicts:
         word = word.replace('\n', '')
-        generate_rt(word, output_rt)
 
-    print("\n3. Rainbow table generates. Check <output_rainbow_tables.txt> ")
+        if word not in words_for_rt:
+            generate_rt(word, output_rt)
+            words_for_rt.append(word)
+
+    print("\n3. Rainbow table generates. Check <output_files/output_rainbow_tables.txt> ")
     output_rt.close()
     dicts.close()
 
@@ -743,6 +769,7 @@ def hashcat():
     pass
 
 
+# main function to open files to bruteforce
 def bruteforce():
     way_to_dict = define_dictionary()
 
@@ -761,17 +788,26 @@ def bruteforce():
         close_wordlists(way_to_dict)
 
 
+# Define hashcat or self-made
 def main():
-    # Define hashcat or self-made
-    print("\n1. Enter 0 - self-made bruteforce, 1 - hashcat bruteforce, 2 - generate rainbow-tables")
+    print(
+        '='*117+"\n\n1. Enter 0 - self-made bruteforce, 1 - hashcat bruteforce, 2 - generate rainbow-tables, e(xit) - to exit from program")
     type_bf = check_input_str()
+
+    if type_bf == "e" or type_bf == "exit":
+        exit(101)
+
     if type_bf == '0':
         bruteforce()
+        print("Check <output_files/output_cracked_hashes.txt>")
     elif type_bf == '1':
         hashcat()
     elif type_bf == '2':
         rainbow()
 
+    print("\n\nWork finished\n" + '=' * 117 + '\n\n')
+
 
 if __name__ == '__main__':
-    main()
+    while True:
+        main()
