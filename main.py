@@ -3,11 +3,14 @@ from hashlib import md5, sha1, sha256, sha224, sha384, sha512, sha3_224, sha3_25
 import string
 import platform
 
-hashes_and_types = []
+global_hashes = []
 words_for_rt = []
 
 # help global parameter to check <1.> stage
 buttons = {'0', '1', '2', 'e', "exit"}
+
+# help global parameter to check hashes
+check_spec_symbols = '~!@#$%^&*()_+-={}[];:\'/\\|.,\"`'
 
 
 ## FUNCTIONS TO HELP //START
@@ -16,7 +19,7 @@ buttons = {'0', '1', '2', 'e', "exit"}
 def write_in_file(hash, type_hash, word, salt):
     exit_file = open("output_files/output_cracked_hashes.txt", "a+")
 
-    if type_hash == 'unknown':
+    if type_hash == 'unknown' or word == '':
         exit_hash = "HASH: {0}, have TYPE: {1}, and original PASSWORD: can't found\n".format(hash, type_hash)
 
         exit_file.write(exit_hash)
@@ -37,27 +40,27 @@ def write_in_file(hash, type_hash, word, salt):
 
 # print function & output hash
 def print_final_error(hash, type_hash):
-    if hash + ' ' + type_hash not in hashes_and_types:
+    if hash not in global_hashes:
         print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: can't found".format(hash, type_hash))
-        hashes_and_types.append(hash + ' ' + type_hash)
+        global_hashes.append(hash)
         write_in_file(hash, type_hash, '', '')
 
 
 # print function & output hash
 def print_final(hash, type_hash, word):
-    if hash + ' ' + type_hash not in hashes_and_types:
+    if hash not in global_hashes:
         print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>".format(hash, type_hash, word))
-        hashes_and_types.append(hash + ' ' + type_hash)
+        global_hashes.append(hash)
         write_in_file(hash, type_hash, word, '')
 
 
 # print function & output hash
 def print_final_salt(hash, type_hash, word, salt):
-    if hash + ' ' + type_hash not in hashes_and_types:
+    if hash not in global_hashes:
         print(
             "\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>, SALT: <{3}>".format(hash,
                                                                                                  type_hash, word, salt))
-        hashes_and_types.append(hash + ' ' + type_hash)
+        global_hashes.append(hash)
         write_in_file(hash, type_hash, word, salt)
 
 
@@ -79,7 +82,7 @@ def get_file_way():
     while True:
         try:
             file_way = str(input())
-            f = open(file_way, 'r', encoding='utf-8')
+            f = open(file_way, 'r', encoding='latin-1')
             f.close()
             return file_way
         except FileNotFoundError:
@@ -636,9 +639,9 @@ def define_dictionary():
 
     if type_dict == 0:
         if platform.system() == 'Linux':
-            wordlists = open('wordlists_for_os/wordlists_linux.txt', 'r', encoding='utf-8')
+            wordlists = open('wordlists_for_os/wordlists_linux.txt', 'r', encoding='latin-1')
         elif platform.system() == 'Windows':
-            wordlists = open('wordlists_for_os/wordlists_win.txt', 'r', encoding='utf-8')
+            wordlists = open('wordlists_for_os/wordlists_win.txt', 'r', encoding='latin-1')
         print("\n3. Self-made dictionary")
         way_to_dict = wordlists
     else:
@@ -651,11 +654,11 @@ def define_dictionary():
 ## FUNCTIONS TO DEFINE //END
 
 # main function to brute hash/es
-def brute(way_to_dict, way_to_hashes):
-    hashes = open(way_to_hashes, 'r', encoding='utf-8')
+def brute(way_to_dict, way_to_hashes, sm_dir):
+    hashes = open(way_to_hashes, 'r', encoding='latin-1')
 
-    dictionary_words = open(way_to_dict, 'r', encoding='utf-8')
-    dictionary_salts = open(way_to_dict, 'r', encoding='utf-8')
+    dictionary_words = open(way_to_dict, 'r', encoding='latin-1')
+    dictionary_salts = open(way_to_dict, 'r', encoding='latin-1')
 
     for hash in hashes:
 
@@ -664,31 +667,15 @@ def brute(way_to_dict, way_to_hashes):
         hash = hash.replace('\n', '')
         bool_word_found = 0
 
-        if hash.count(':') == 0:  # WORK WITHOUT <:>
+        if hash not in global_hashes and hash not in check_spec_symbols:
 
-            type_hash = define_hash_type(hash)
+            if hash.count(':') == 0:  # WORK WITHOUT <:>
 
-            if type_hash is None:
-                print_final_error(hash, 'unknown')
-                continue
+                type_hash = define_hash_type(hash)
 
-            dictionary_words.seek(0, 0)
-
-            for word in dictionary_words:
-
-                word = word.replace('\n', '')
-
-                if not define_hash_word_no_salt(hash, type_hash, word):
-                    bool_word_found = 0
-                    count_for_error += 1
-                else:
-                    bool_word_found = 1
-                    break
-
-            if bool_word_found == 1:
-                continue
-
-            else:
+                if type_hash is None:
+                    print_final_error(hash, 'unknown')
+                    continue
 
                 dictionary_words.seek(0, 0)
 
@@ -696,50 +683,73 @@ def brute(way_to_dict, way_to_hashes):
 
                     word = word.replace('\n', '')
 
-                    dictionary_salts.seek(0, 0)
-
-                    for salt in dictionary_salts:
-
-                        salt = salt.replace('\n', '')
-
-                        if not define_hash_word_with_salt(hash, type_hash, word, salt):
-                            bool_word_found = 0
-                            count_for_error += 1
-                        else:
-                            bool_word_found = 1
-                            break
-
-                    if bool_word_found == 1:
+                    if not define_hash_word_no_salt(hash, type_hash, word):
+                        bool_word_found = 0
+                        count_for_error += 1
+                    else:
+                        bool_word_found = 1
                         break
 
-        else:
+                if bool_word_found == 1:
+                    continue
 
-            dictionary_words.seek(0, 0)  # WORK WITH <:>
+                # else:
+                #
+                #     dictionary_words.seek(0, 0)
+                #
+                #     for word in dictionary_words:
+                #
+                #         word = word.replace('\n', '')
+                #
+                #         dictionary_salts.seek(0, 0)
+                #
+                #         for salt in dictionary_salts:
+                #
+                #             salt = salt.replace('\n', '')
+                #
+                #             if not define_hash_word_with_salt(hash, type_hash, word, salt):
+                #                 bool_word_found = 0
+                #                 count_for_error += 1
+                #             else:
+                #                 bool_word_found = 1
+                #                 break
+                #
+                #         if bool_word_found == 1:
+                #             break
 
-            type_hash = define_hash_type(hash.partition(':')[0])
+            else:
 
-            if type_hash is None:
-                print_final_error(hash, 'unknown')
-                continue
+                dictionary_words.seek(0, 0)  # WORK WITH <:>
 
-            salt = hash.partition(':')[2]
+                type_hash = define_hash_type(hash.partition(':')[0])
 
-            for word in dictionary_words:
+                if type_hash is None:
+                    print_final_error(hash, 'unknown')
+                    continue
 
-                word = word.replace('\n', '')
+                salt = hash.partition(':')[2]
 
-                salt = salt.replace('\n', '')
+                for word in dictionary_words:
 
-                if not define_hash_word_with_salt(hash, type_hash, word, salt):
-                    bool_word_found = 0
-                    count_for_error += 1
-                else:
-                    bool_word_found = 1
-                    break
+                    word = word.replace('\n', '')
 
-        if bool_word_found == 0 and count_for_error != 0:
-            print_final_error(hash, type_hash)
-            continue
+                    salt = salt.replace('\n', '')
+
+                    if not define_hash_word_with_salt(hash, type_hash, word, salt):
+                        bool_word_found = 0
+                        count_for_error += 1
+                    else:
+                        bool_word_found = 1
+                        break
+
+            if sm_dir == 1:
+                if bool_word_found == 0 and count_for_error != 0 and way_to_dict.count('4') == 1:
+                    print_final_error(hash, type_hash)
+                    continue
+            else:
+                if bool_word_found == 0 and count_for_error != 0:
+                    print_final_error(hash, type_hash)
+                    continue
 
     dictionary_words.close()
     dictionary_salts.close()
@@ -760,7 +770,7 @@ def rainbow():
             generate_rt(word, output_rt)
             words_for_rt.append(word)
 
-    print("\n3. Rainbow table generates. Check <output_files/output_rainbow_tables.txt> ")
+    print("\n3. Rainbow table generated."'\n'+'+'*15+"\nCheck <output_files/output_rainbow_tables.txt> ")
     output_rt.close()
     dicts.close()
 
@@ -777,13 +787,13 @@ def bruteforce():
     way_to_hashes = get_file_way()
 
     if isinstance(way_to_dict, str):
-        brute(way_to_dict, way_to_hashes)
+        brute(way_to_dict, way_to_hashes, 0)
 
     else:
         for way_to_dict_else in way_to_dict:
             way_to_dict_else = way_to_dict_else.replace('\n', '')
 
-            brute(way_to_dict_else, way_to_hashes)
+            brute(way_to_dict_else, way_to_hashes, 1)
 
         close_wordlists(way_to_dict)
 
@@ -799,13 +809,13 @@ def main():
 
     if type_bf == '0':
         bruteforce()
-        print("Check <output_files/output_cracked_hashes.txt>")
+        print("'\n'+'+'*15+\nCheck <output_files/output_cracked_hashes.txt>")
     elif type_bf == '1':
         hashcat()
     elif type_bf == '2':
         rainbow()
 
-    print("\n\nWork finished\n" + '=' * 117 + '\n\n')
+    print('\n'+'+'*15+"\nWork finished\n")
 
 
 if __name__ == '__main__':
