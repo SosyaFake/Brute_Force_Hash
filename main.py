@@ -1,7 +1,12 @@
 import hashlib
+import time
 from hashlib import md5, sha1, sha256, sha224, sha384, sha512, sha3_224, sha3_256, sha3_384, sha3_512
 import string
 import platform
+import os
+from tqdm import tqdm
+
+pbar = tqdm()
 
 global_hashes = []
 words_for_rt = []
@@ -14,6 +19,15 @@ check_spec_symbols = '~!@#$%^&*()_+-={}[];:\'/\\|.,\"`'
 
 
 ## FUNCTIONS TO HELP //START
+
+
+# function to clear console
+def clear_console():
+    if platform.system() == 'Linux':
+        os.system('clear')
+    elif platform.system() == 'Windows':
+        os.system('cls')
+
 
 # function to output to file
 def write_in_file(hash, type_hash, word, salt):
@@ -41,7 +55,6 @@ def write_in_file(hash, type_hash, word, salt):
 # print function & output hash
 def print_final_error(hash, type_hash):
     if hash not in global_hashes:
-        print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: can't found".format(hash, type_hash))
         global_hashes.append(hash)
         write_in_file(hash, type_hash, '', '')
 
@@ -49,7 +62,6 @@ def print_final_error(hash, type_hash):
 # print function & output hash
 def print_final(hash, type_hash, word):
     if hash not in global_hashes:
-        print("\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>".format(hash, type_hash, word))
         global_hashes.append(hash)
         write_in_file(hash, type_hash, word, '')
 
@@ -57,9 +69,6 @@ def print_final(hash, type_hash, word):
 # print function & output hash
 def print_final_salt(hash, type_hash, word, salt):
     if hash not in global_hashes:
-        print(
-            "\n6-7. HASH: {0}, have TYPE: {1}, and original PASSWORD: <{2}>, SALT: <{3}>".format(hash,
-                                                                                                 type_hash, word, salt))
         global_hashes.append(hash)
         write_in_file(hash, type_hash, word, salt)
 
@@ -94,7 +103,6 @@ def check_input_str():
     input_str = str(input())
 
     if input_str in buttons:
-        print(input_str)
         return input_str
 
     else:
@@ -661,6 +669,8 @@ def brute(way_to_dict, way_to_hashes, sm_dir):
     dictionary_salts = open(way_to_dict, 'r', encoding='latin-1')
 
     for hash in hashes:
+        pbar.update(1)
+        time.sleep(0.05)
 
         count_for_error = 0
 
@@ -692,30 +702,6 @@ def brute(way_to_dict, way_to_hashes, sm_dir):
 
                 if bool_word_found == 1:
                     continue
-
-                # else:
-                #
-                #     dictionary_words.seek(0, 0)
-                #
-                #     for word in dictionary_words:
-                #
-                #         word = word.replace('\n', '')
-                #
-                #         dictionary_salts.seek(0, 0)
-                #
-                #         for salt in dictionary_salts:
-                #
-                #             salt = salt.replace('\n', '')
-                #
-                #             if not define_hash_word_with_salt(hash, type_hash, word, salt):
-                #                 bool_word_found = 0
-                #                 count_for_error += 1
-                #             else:
-                #                 bool_word_found = 1
-                #                 break
-                #
-                #         if bool_word_found == 1:
-                #             break
 
             else:
 
@@ -763,6 +749,13 @@ def rainbow():
     dicts = open(way_to_dict, 'r')
     output_rt = open('output_files/output_rainbow_tables.txt', 'a+')
 
+    pbar.refresh()
+    pbar.reset(total=2)
+    clear_console()
+
+    pbar.update(1)
+    time.sleep(0.5)
+
     for word in dicts:
         word = word.replace('\n', '')
 
@@ -770,12 +763,16 @@ def rainbow():
             generate_rt(word, output_rt)
             words_for_rt.append(word)
 
-    print("\n3. Rainbow table generated."'\n'+'+'*15+"\nCheck <output_files/output_rainbow_tables.txt> ")
+    pbar.update(1)
+    time.sleep(0.5)
+    pbar.close()
+    clear_console()
+
     output_rt.close()
     dicts.close()
 
 
-def hashcat():
+def hashcat():  # TODO: MAKE INTEGRATION WITH CONSOLE AND HASHCAT
     pass
 
 
@@ -786,38 +783,66 @@ def bruteforce():
     print_file_hashes()
     way_to_hashes = get_file_way()
 
+    len_hash_file = open(way_to_hashes, 'r', encoding='latin-1')
+    len_hash = 0
+    for _ in len_hash_file:
+        len_hash += 1
+    len_hash_file.close()
+
     if isinstance(way_to_dict, str):
         brute(way_to_dict, way_to_hashes, 0)
+        pbar.refresh()
+        pbar.reset(total=len_hash)
+        clear_console()
 
     else:
+        pbar.refresh()
+        pbar.reset(total=(len_hash*10)+10)
+        clear_console()
         for way_to_dict_else in way_to_dict:
+            pbar.update(1)
+            time.sleep(0.05)
             way_to_dict_else = way_to_dict_else.replace('\n', '')
 
             brute(way_to_dict_else, way_to_hashes, 1)
 
         close_wordlists(way_to_dict)
 
+    pbar.close()
+    clear_console()
+
 
 # Define hashcat or self-made
 def main():
     print(
-        '='*117+"\n\n1. Enter 0 - self-made bruteforce, 1 - hashcat bruteforce, 2 - generate rainbow-tables, e(xit) - to exit from program")
+        '='*15+"\n\n1. Enter 0 - self-made bruteforce, 1 - hashcat bruteforce, 2 - generate rainbow-tables, e(xit) - to exit from program")
     type_bf = check_input_str()
 
     if type_bf == "e" or type_bf == "exit":
+        print('\n\nExit from program...')
+        time.sleep(0.05)
+        pbar.close()
+        clear_console()
         exit(101)
 
     if type_bf == '0':
         bruteforce()
-        print("'\n'+'+'*15+\nCheck <output_files/output_cracked_hashes.txt>")
+        print('+'*15 + "\n\nCheck <output_files/output_cracked_hashes.txt>")
     elif type_bf == '1':
         hashcat()
     elif type_bf == '2':
         rainbow()
+        print('+' * 15 + "\n\nCheck <output_files/output_rainbow_tables.txt> ")
 
-    print('\n'+'+'*15+"\nWork finished\n")
+    print('\n'+'+'*15+"\n\nWork finished\n\n"+'+'*15)
+
+    time.sleep(8)
+    clear_console()
 
 
 if __name__ == '__main__':
     while True:
+        pbar = tqdm()
+        clear_console()
         main()
+        global_hashes = []
