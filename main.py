@@ -619,6 +619,24 @@ def define_hash_word_no_salt(hash, type_hash, word):
     return 0
 
 
+# function to define hash without salt for hashcat
+def define_hash_hashcat(hash):
+    hash_len = len(hash)
+    if hash_len == 32 and is_hex(hash):
+        return '0'
+    elif hash_len == 40 and is_hex(hash):
+        return '100'
+    elif hash_len == 56 and is_hex(hash):
+        return '1300'
+    elif hash_len == 64 and is_hex(hash):
+        return '1400'
+    elif hash_len == 96 and is_hex(hash):
+        return '10800'
+    elif hash_len == 128 and is_hex(hash):
+        return '1700'
+    return None
+
+
 # function to define hash type
 def define_hash_type(hash):
     hash_len = len(hash)
@@ -635,6 +653,21 @@ def define_hash_type(hash):
     elif hash_len == 128 and is_hex(hash):
         return 'sha512'
     return None
+
+
+# function to define dir to hashcat
+def define_hashcat_dir():
+    try:
+        os.chdir(os.getcwd()+'/hashcat')
+    except FileNotFoundError:
+        while True:
+            try:
+                print("\n3. Enter way to hashcat")
+                hashcat_way = str(input())
+                os.chdir(hashcat_way)
+                return 1
+            except FileNotFoundError:
+                print("\nError hashcat not found...\nEnter another way to file")
 
 
 # function to define dictionary
@@ -772,8 +805,75 @@ def rainbow():
     dicts.close()
 
 
-def hashcat():  # TODO: MAKE INTEGRATION WITH CONSOLE AND HASHCAT
-    pass
+# function to integrate with hashcat
+def hashcat(way_to_dict, way_to_hashes, len_hash):
+
+    define_hashcat_dir()
+
+    if isinstance(way_to_dict, str):
+
+        pbar.refresh()
+        pbar.reset(total=len_hash)
+        clear_console()
+
+        hashes = open(way_to_hashes, 'r', encoding='latin-1')
+
+        for hash in hashes:
+
+            pbar.update(1)
+            time.sleep(0.05)
+
+            hash = hash.replace('\n', '')
+
+            if hash not in global_hashes and hash not in check_spec_symbols:
+
+                type_hash = define_hash_hashcat(hash)
+
+                output = os.popen('hashcat.exe '+hash+' -m '+type_hash+' -a 0 -o "../output_files/output_cracked_hashes.txt" "'+way_to_dict+'"').read()
+
+                if output.find('Status...........: Cracked') != -1:
+                    global_hashes.append(hash)
+
+        hashes.close()
+
+    else:
+
+        pbar.refresh()
+        pbar.reset(total=(len_hash * 10) + 10)
+        clear_console()
+
+        for way_to_dict_else in way_to_dict:
+
+            pbar.update(1)
+            time.sleep(0.05)
+
+            way_to_dict_else = way_to_dict_else.replace('\n', '')
+
+            hashes = open(way_to_hashes, 'r', encoding='latin-1')
+
+            for hash in hashes:
+
+                pbar.update(1)
+                time.sleep(0.05)
+
+                hash = hash.replace('\n', '')
+
+                if hash not in global_hashes and hash not in check_spec_symbols:
+
+                    type_hash = define_hash_hashcat(hash)
+
+                    output = os.popen(
+                        'hashcat.exe ' + hash + ' -m ' + type_hash + ' -a 0 -o "../output_files/output_cracked_hashes.txt" "../' + way_to_dict_else + '"').read()
+
+                    if output.find('Status...........: Cracked') != -1:
+                        global_hashes.append(hash)
+
+            hashes.close()
+
+        close_wordlists(way_to_dict)
+
+    clear_console()
+    os.chdir('..')
 
 
 # main function to open files to bruteforce
@@ -828,8 +928,23 @@ def main():
     if type_bf == '0':
         bruteforce()
         print('+'*15 + "\n\nCheck <output_files/output_cracked_hashes.txt>")
+
     elif type_bf == '1':
-        hashcat()
+        print('\n' + '+' * 15 + "\n\nHashcat works with ONLY <md5, sha1, sha256, sha224, sha384, sha512> NO SALT\n\n" + '+' * 15 + '\n')
+        way_to_dict = define_dictionary()
+
+        print_file_hashes()
+        way_to_hashes = get_file_way()
+
+        len_hash_file = open(way_to_hashes, 'r', encoding='latin-1')
+        len_hash = 0
+        for _ in len_hash_file:
+            len_hash += 1
+        len_hash_file.close()
+
+        hashcat(way_to_dict, way_to_hashes, len_hash)
+        print('+' * 15 + "\n\nCheck <output_files/output_cracked_hashes.txt>")
+
     elif type_bf == '2':
         rainbow()
         print('+' * 15 + "\n\nCheck <output_files/output_rainbow_tables.txt> ")
