@@ -806,7 +806,7 @@ def rainbow():
 
 
 # function to integrate with hashcat
-def hashcat(way_to_dict, way_to_hashes, len_hash):
+def hashcat(way_to_dict, way_to_hashes, len_hash, type_os):
 
     define_hashcat_dir()
 
@@ -829,7 +829,7 @@ def hashcat(way_to_dict, way_to_hashes, len_hash):
 
                 type_hash = define_hash_hashcat(hash)
 
-                output = os.popen('hashcat.exe '+hash+' -m '+type_hash+' -a 0 -o "../output_files/output_cracked_hashes.txt" "'+way_to_dict+'"').read()
+                output = os.popen('hashcat' + type_os + ' '+hash+' -m '+type_hash+' -a 0 -o "../output_files/output_cracked_hashes.txt" "'+way_to_dict+'"').read()
 
                 if output.find('Status...........: Cracked') != -1:
                     global_hashes.append(hash)
@@ -863,7 +863,7 @@ def hashcat(way_to_dict, way_to_hashes, len_hash):
                     type_hash = define_hash_hashcat(hash)
 
                     output = os.popen(
-                        'hashcat.exe ' + hash + ' -m ' + type_hash + ' -a 0 -o "../output_files/output_cracked_hashes.txt" "../' + way_to_dict_else + '"').read()
+                        'hashcat' + type_os + ' ' + hash + ' -m ' + type_hash + ' -a 0 -o "../output_files/output_cracked_hashes.txt" "../' + way_to_dict_else + '"').read()
 
                     if output.find('Status...........: Cracked') != -1:
                         global_hashes.append(hash)
@@ -930,6 +930,14 @@ def main():
         print('+'*15 + "\n\nCheck <output_files/output_cracked_hashes.txt>")
 
     elif type_bf == '1':
+
+        type_os = ''
+
+        if platform.system() == 'Linux':
+            type_os = ''
+        elif platform.system() == 'Windows':
+            type_os = '.exe'
+
         print('\n' + '+' * 15 + "\n\nHashcat works with ONLY <md5, sha1, sha256, sha224, sha384, sha512> NO SALT\n\n" + '+' * 15 + '\n')
         way_to_dict = define_dictionary()
 
@@ -942,7 +950,7 @@ def main():
             len_hash += 1
         len_hash_file.close()
 
-        hashcat(way_to_dict, way_to_hashes, len_hash)
+        hashcat(way_to_dict, way_to_hashes, len_hash, type_os)
         print('+' * 15 + "\n\nCheck <output_files/output_cracked_hashes.txt>")
 
     elif type_bf == '2':
