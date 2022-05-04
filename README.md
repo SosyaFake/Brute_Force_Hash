@@ -8,7 +8,7 @@
 
 1. Python version > 3.0
 2. tqdm for python (<pip install tqdm>)
-3. hashcat (if you are linux user <sudo apt install hashcat> / if you are windows user download hashcat to <PATH_TO_BFH/hashcat>
+3. hashcat (if you are linux user ```sudo apt install hashcat``` / if you are windows user download hashcat to <PATH_TO_BFH/hashcat>)
 
 Hashcat GPU Driver requirements:
  - AMD GPUs on Linux require "RadeonOpenCompute (ROCm)" Software Platform (3.1 or later)
