@@ -20,6 +20,15 @@ check_spec_symbols = '~!@#$%^&*()_+-={}[];:\'/\\|.,\"`'
 
 ## FUNCTIONS TO HELP //START
 
+# function to check output direction
+def check_output_dir():
+    try:
+        os.chdir(os.getcwd() + '/output_files')
+    except FileNotFoundError:
+        os.mkdir(os.getcwd() + '/output_files')
+
+    os.chdir('..')
+
 
 # function to clear console
 def clear_console():
@@ -660,14 +669,17 @@ def define_hashcat_dir():
     try:
         os.chdir(os.getcwd()+'/hashcat')
     except FileNotFoundError:
-        while True:
-            try:
-                print("\n3. Enter way to hashcat")
-                hashcat_way = str(input())
-                os.chdir(hashcat_way)
-                return 1
-            except FileNotFoundError:
-                print("\nError hashcat not found...\nEnter another way to file")
+        if platform.system() == 'Linux':
+            print("\nPlease install hashcat, enter <sudo apt install hashcat>")
+        elif platform.system() == 'Windows':
+            while True:
+                try:
+                    print("\n3. Enter way to hashcat")
+                    hashcat_way = str(input())
+                    os.chdir(hashcat_way)
+                    return 1
+                except FileNotFoundError:
+                    print("\nError hashcat not found...\nEnter another way to file")
 
 
 # function to define dictionary
@@ -878,6 +890,7 @@ def hashcat(way_to_dict, way_to_hashes, len_hash, type_os):
 
 # main function to open files to bruteforce
 def bruteforce():
+
     way_to_dict = define_dictionary()
 
     print_file_hashes()
@@ -914,6 +927,9 @@ def bruteforce():
 
 # Define hashcat or self-made
 def main():
+
+    check_output_dir()
+
     print(
         '='*15+"\n\n1. Enter 0 - self-made bruteforce, 1 - hashcat bruteforce, 2 - generate rainbow-tables, e(xit) - to exit from program")
     type_bf = check_input_str()
