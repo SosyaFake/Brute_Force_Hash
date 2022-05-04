@@ -7,8 +7,8 @@
 ## What you need:
 
 1. Python version > 3.0
-2. tqdm for python (<pip install tqdm>)
-3. hashcat (if you are linux user ```sudo apt install hashcat``` / if you are windows user download hashcat to <PATH_TO_BFH/hashcat>)
+2. tqdm for python ```pip install tqdm```
+3. hashcat (if you are linux user ```sudo apt install hashcat``` / if you are windows user download hashcat to ```PATH_TO_BFH/hashcat```)
 
 Hashcat GPU Driver requirements:
  - AMD GPUs on Linux require "RadeonOpenCompute (ROCm)" Software Platform (3.1 or later)
@@ -19,13 +19,13 @@ Hashcat GPU Driver requirements:
 
 ## How to install:
 
-1. Download archive / git clone https://github.com/SosyaFake/Brute_Force_Hash.git
+1. Download archive / ```git clone https://github.com/SosyaFake/Brute_Force_Hash.git```
 2. Unpack archive / skip
 3. Open command-line
 4. Open main.py in command-line
 5. Use
 6. ...
-7. Profit. (Check <output_files/output_cracked_hashes.txt>)
+7. Profit. (Check ```output_files/output_cracked_hashes.txt```)
 
 ---
 
