@@ -1,6 +1,6 @@
 # **Brute Force Hash** and integration with **hashcat**.
 
-# **Work's only on Win/Linxus OS!**
+# **Work's only on Win/Linux OS!**
 
 ---
 
