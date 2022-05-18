@@ -1,4 +1,3 @@
-import hashlib
 import time
 from hashlib import md5, sha1, sha256, sha224, sha384, sha512, sha3_224, sha3_256, sha3_384, sha3_512
 import string
@@ -6,8 +5,10 @@ import platform
 import os
 from tqdm import tqdm
 
+# initialize tqdm
 pbar = tqdm()
 
+# initialize global parameters
 global_hashes = []
 words_for_rt = []
 
